@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "&#x946b;&#x4ebf;&#x6d4b;&#x8bd5;/BlueManager/BLEManager.m"
-            timestampString = "514434588.267032"
+            timestampString = "514439147.577599"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "920"
-            endingLineNumber = "920"
+            startingLineNumber = "914"
+            endingLineNumber = "914"
             landmarkName = "-setTime"
             landmarkType = "7">
          </BreakpointContent>

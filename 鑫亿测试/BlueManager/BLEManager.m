@@ -602,19 +602,15 @@ static BLEManager *manager;
         else if([charaUUID isEqual:[CBUUID UUIDWithString:R_RealData_UUID]]){
             //  花草 杯垫 欢乐豆
             switch ([GetUserDefault(DType) intValue]) {
-                case 1:
-                {
+                case 1:{
                     int temp = bytes[7];
                     int soil = bytes[8];
                     int light = bytes[9];
                     [self.delegate CallBack_Data:2 uuidString:uuid obj:@[ @(temp - 50),@(soil),@(light)]];
-                }
-                    break;
-                case 2:
-                {
+                }break;
+                case 2:{
                     
-                }
-                    break;
+                }break;
                 case 3:{
                     NSNumber *year = @(2000 + bytes[1]);
                     NSNumber *month = @(bytes[2]);
@@ -650,8 +646,37 @@ static BLEManager *manager;
                     
                     [self.delegate CallBack_Data:2 uuidString:uuid obj:@[@(WORK_MODE),@(CALIBRATE_OFFSET),@(ORIGINA_ANGLE),@(CALIBRATE_ANGLE),@(PREV_ANGLE),@(THIS_ANGLE),date]];
                 }break;
-                case 5:
-                {
+                case 5:{
+                    
+                    /*
+                     旧数据包                                                新数据包
+                     18字节                                                  20字节
+                     
+                     hBuff[1] = hTime->year-2000;                            UI08 nPktSerial;
+                     hBuff[2] = hTime->month+1;                              UI32 dwNowTime;             //  从2000-01-01开始的秒钟
+                     hBuff[3] = hTime->day+1;
+                     hBuff[4] = hTime->hour;
+                     hBuff[5] = hTime->minute;
+                     hBuff[6] = hTime->second;                               UI08 nWorkMode;
+                     
+                     if(IsCalibrateMode)     hBuff[7]=0x03;                  UI16 wWorkTime;             //  秒钟
+                     else if(IsWorkMode)     hBuff[7]=0x02;
+                     else if(IsInitTime)     hBuff[7]=0x01;
+                     else                    hBuff[7]=0x00;
+                     
+                     hBuff[8] = nCalibrateOffset;
+                     hBuff[9] = nRealTimeAngleS;                             UI08 nCalibrateOffset;      //  校准偏移
+                     hBuff[10]= nRealTimeAngleC;                             UI08 nRealTimeAngleS;       //  原始角度
+                     hBuff[11]= nPrevMinuteAngle;                            UI08 nRealTimeAngleC;       //  校准后的角度
+                     hBuff[12]= nThisMinuteAngle;                            UI08 nPrevMinuteAngle;      //  前1分钟的角度
+                     hBuff[13]= nBattPercent;                                UI08 nThisMinuteAngle;      //  本1分钟的角度
+                     hBuff[14]= nBattVol;                                    UI08 nBattPercent;          //  电量百分比
+                     hBuff[15]= 0x00;                                        UI08 nBattVol;              //  电池电压
+                     hBuff[16]= 0x00;                                        UI08 nSoundSerial;          //  声音命令序号
+                     UI08 nSoundIndex;           //  声音播放索引    
+                     UI08 nSoundAction;          //  1:PLAY  0:STOP
+                     */
+                    
                     NSNumber *year = @(2000 + bytes[1]);
                     NSNumber *month = @(bytes[2]);
                     NSNumber *day = @(bytes[3]);
@@ -661,6 +686,8 @@ static BLEManager *manager;
                     NSMutableArray *arrNumb = [[NSMutableArray alloc] initWithObjects:year, month, day, hour, minute, second, nil];
                     NSDate *date = [self getDateFromInt:arrNumb];
                     
+                    
+                    NSLog(@"时间的解析的结果:%@-%@-%@ %@:%@:%@", year, month, day, hour, minute, second);
                     NSLog(@"----实时数据的 解析后的时间为 :%@", date);
                     if (!date) {
                         date = [NSDate date];
@@ -690,13 +717,10 @@ static BLEManager *manager;
                      */
                     
                     [self.delegate CallBack_Data:2 uuidString:uuid obj:@[@(WORK_MODE),@(CALIBRATE_OFFSET),@(ORIGINA_ANGLE),@(CALIBRATE_ANGLE),@(PREV_ANGLE),@(THIS_ANGLE), date]];
-                }
-                    break;
-                case 4:
-                {
+                }break;
+                case 4:{
                     
-                }
-                    break;
+                }break;
             }
         }
     }
