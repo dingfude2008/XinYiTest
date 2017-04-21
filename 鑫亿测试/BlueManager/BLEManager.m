@@ -75,8 +75,7 @@ static BLEManager *manager;
 //}
 
 
--(void)startScan
-{
+-(void)startScan{
     NSLog(@"----------------正在扫描");
     dispatch_queue_t centralQueue = dispatch_queue_create("com.xinyi.Coasters", DISPATCH_QUEUE_SERIAL);
     if (!self.Bluetooth)
@@ -537,12 +536,12 @@ static BLEManager *manager;
     
     [data LogData];
     
-    if ([self checkData:data])
-    {
-        if ([charaUUID isEqual:[CBUUID UUIDWithString:RW_DateTime_UUID]])
-        {
-            if([GetUserDefault(DType) intValue] < 3)
-            {
+    
+    int dType = [GetUserDefault(DType) intValue];
+    
+    if ((dType < 4 && [self checkData:data]) || (dType == 5 && [self checkData1:data])) {
+        if ([charaUUID isEqual:[CBUUID UUIDWithString:RW_DateTime_UUID]]){
+            if(dType < 3){
                 NSNumber *year  = [NSNumber numberWithInt:2000 + bytes[1]];
                 NSNumber *month = [NSNumber numberWithInt:1 + bytes[2]];
                 NSNumber *day   = [NSNumber numberWithInt:1 + bytes[3]];
@@ -568,9 +567,7 @@ static BLEManager *manager;
                 {
                     [self.delegate CallBack_Data:1 uuidString:uuid obj:date];
                 }
-            }
-            else
-            {
+            }else{
                 // 欢乐豆 N2  K9
                 NSNumber *year      = @(2000 + bytes[1]);
                 NSNumber *month     = @(bytes[2]);
@@ -602,8 +599,7 @@ static BLEManager *manager;
                 }
             }
         }
-        else if([charaUUID isEqual:[CBUUID UUIDWithString:R_RealData_UUID]]) //
-        {
+        else if([charaUUID isEqual:[CBUUID UUIDWithString:R_RealData_UUID]]){
             //  花草 杯垫 欢乐豆
             switch ([GetUserDefault(DType) intValue]) {
                 case 1:
@@ -619,9 +615,7 @@ static BLEManager *manager;
                     
                 }
                     break;
-                case 3:
-                case 5:
-                {
+                case 3:{
                     NSNumber *year = @(2000 + bytes[1]);
                     NSNumber *month = @(bytes[2]);
                     NSNumber *day = @(bytes[3]);
@@ -648,7 +642,6 @@ static BLEManager *manager;
                     int THIS_ANGLE          = [self convert: bytes[12]];    // 当前分钟的角度。(实时角度在一分钟内的综合处理后的结果)
                     
                     
-                    
                     /*
                      该数据包 APP 根据需要可频繁被读取,例如 1 秒钟一次。
                      该数据包中的 ORIGINA_ANGLE,CALIBRATE_ANGLE 实时更新(不是 1 分钟更新一次)。 该数据包中的 PREV_ANGLE,THIS_ANGLE 1 分钟更新一次。
@@ -656,6 +649,47 @@ static BLEManager *manager;
                      */
                     
                     [self.delegate CallBack_Data:2 uuidString:uuid obj:@[@(WORK_MODE),@(CALIBRATE_OFFSET),@(ORIGINA_ANGLE),@(CALIBRATE_ANGLE),@(PREV_ANGLE),@(THIS_ANGLE),date]];
+                }break;
+                case 5:
+                {
+                    NSNumber *year = @(2000 + bytes[1]);
+                    NSNumber *month = @(bytes[2]);
+                    NSNumber *day = @(bytes[3]);
+                    NSNumber *hour = @(bytes[4]);
+                    NSNumber *minute = @(bytes[5]);
+                    NSNumber *second = @(bytes[6]);
+                    NSMutableArray *arrNumb = [[NSMutableArray alloc] initWithObjects:year, month, day, hour, minute, second, nil];
+                    NSDate *date = [self getDateFromInt:arrNumb];
+                    
+                    NSLog(@"----实时数据的 解析后的时间为 :%@", date);
+                    if (!date) {
+                        date = [NSDate date];
+                    }
+                    
+                    /*
+                     03:校准状态
+                     02:正常工作状态
+                     01:空闲状态,已经设置好芽的时间
+                     00:空闲状态,芽的时间未设置
+                     */
+                    
+                    int WORK_MODE           = [self convert: bytes[7]];     //
+                    int CALIBRATE_OFFSET    = [self convert: bytes[8]];     // 校准偏移角。按下芽的“十”字键时的角度。范围:[-45°,+45°]。
+                    int ORIGINA_ANGLE       = [self convert: bytes[9]];     // 未校准的实时角度。范围:[-125°,+125°]。
+                    int CALIBRATE_ANGLE     = [self convert: bytes[10]];    // 已校准的实时角度。范围:[-90°,+90°]。 = ORIGINA_ANGLE - CALIBRATE_OFFSET;
+                    int PREV_ANGLE          = [self convert: bytes[11]];    // 上一分钟的角度。(实时角度在一分钟内的综合处理后的结果)
+                    int THIS_ANGLE          = [self convert: bytes[12]];    // 当前分钟的角度。(实时角度在一分钟内的综合处理后的结果)
+                    
+                    
+                    NSLog(@"WORK_MODE:%d, CALIBRATE_OFFSET:%d, ORIGINA_ANGLE:%d, CALIBRATE_ANGLE:%d, PREV_ANGLE:%d, THIS_ANGLE:%d, ", WORK_MODE, CALIBRATE_OFFSET, ORIGINA_ANGLE, CALIBRATE_ANGLE, PREV_ANGLE, THIS_ANGLE);
+                    
+                    /*
+                     该数据包 APP 根据需要可频繁被读取,例如 1 秒钟一次。
+                     该数据包中的 ORIGINA_ANGLE,CALIBRATE_ANGLE 实时更新(不是 1 分钟更新一次)。 该数据包中的 PREV_ANGLE,THIS_ANGLE 1 分钟更新一次。
+                     该数据包中的 CALIBRATE_OFFSET 校准时更新。
+                     */
+                    
+                    [self.delegate CallBack_Data:2 uuidString:uuid obj:@[@(WORK_MODE),@(CALIBRATE_OFFSET),@(ORIGINA_ANGLE),@(CALIBRATE_ANGLE),@(PREV_ANGLE),@(THIS_ANGLE), date]];
                 }
                     break;
                 case 4:
@@ -792,6 +826,23 @@ static BLEManager *manager;
     return isTrue;
 }
 
+// 验证数据是否正确
+-(BOOL)checkData1:(NSData *)data
+{
+    if (!data) {
+        return  NO;
+    }
+    NSUInteger count = data.length;
+    Byte *bytes = (Byte *)data.bytes;
+    int sum = 0;
+    
+    for (int i = 0; i < count - 1; i++) {
+        sum += (bytes[i]) ^ i;
+    }
+    BOOL isTrue = (sum & 0xFF) == bytes[count - 1];
+    return isTrue;
+}
+
 // 读取时间
 -(void)readTime
 {
@@ -800,8 +851,9 @@ static BLEManager *manager;
 
 -(void)setTime
 {
-    if([GetUserDefault(DType) intValue] < 3 || [GetUserDefault(DType) intValue] == 5)
-    {
+    int dType = [GetUserDefault(DType) intValue];
+    
+    if(dType < 3){
         NSDate *now = [NSDate date];
         
         NSLog(@"now:%@", now);
@@ -814,6 +866,8 @@ static BLEManager *manager;
         
         NSLog(@"发送的时间为 %d-%d-%d %d:%d:%d", year, month, day, hour, minute, second);
         char data[16];
+        
+        
         
         data[0] = DataFirst;
         data[1] = (year - 2000) & 0xFF;
@@ -832,9 +886,7 @@ static BLEManager *manager;
         
         NSData *dataPush = [NSData dataWithBytes:data length:16];
         [self Command:dataPush uuidString:[self.cbpLink.identifier UUIDString] charaUUID:RW_DateTime_UUID];
-    }
-    else
-    {
+    }else{
         NSDate *now = [NSDate date];
         NSLog(@"now:%@", now);
         int year = (int)[now getFromDate:1];
@@ -847,7 +899,7 @@ static BLEManager *manager;
         NSLog(@"发送的时间为 %d-%d-%d %d:%d:%d", year, month, day, hour, minute, second);
         char data[16];
         
-        data[0] =  [GetUserDefault(DType) intValue] == 3 ? 0xF5 : 0xF3;
+        data[0] =  dType == 3 ? 0xF5 : 0xF3;
         data[1] = (year - 2000) & 0xFF;
         data[2] = month & 0xFF;
         data[3] = day& 0xFF;
@@ -857,10 +909,21 @@ static BLEManager *manager;
         data[7] =  data[8] =  data[9] =  data[10] =  data[11] =  data[12] =  data[13] =  data[14] = 0;
         
         int sum = 0;
-        for (int i = 1; i < 15; i++) {
-            sum += (data[i]) ^ i;
+        
+        if(dType == 3){
+            for (int i = 1; i < 15; i++) {
+                sum += (data[i]) ^ i;
+            }
+            data[15] = sum & 0xFF;
+        }else if(dType == 5){
+            
+            for (int i = 0; i < 15; i++) {
+                sum += (data[i]) ^ i;
+            }
+            data[15] = sum & 0xFF;
         }
-        data[15] = sum & 0xFF;
+        
+
         
         NSData *dataPush = [NSData dataWithBytes:data length:16];
         [self Command:dataPush uuidString:[self.cbpLink.identifier UUIDString] charaUUID:RW_DateTime_UUID];
