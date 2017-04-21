@@ -1,0 +1,49 @@
+//
+//  Coasters.pch
+//  Coasters
+//
+//  Created by 丁付德 on 15/8/10.
+//  Copyright (c) 2015年 dfd. All rights reserved.
+//
+
+#ifndef Coasters_Coasters_pch
+#define Coasters_Coasters_pch
+
+#import "dConfig.h"
+//#import "UIImageView+WebCache.h"
+#import "MBProgressHUD+Add.h"
+//#import "UIViewController+Delay.h"
+//#import "NSObject+userDefault.h"
+//#import "NSObject+userInfo.h"
+//#import "UIFont+AppFont.h"
+//#import "UIImage+LogN.h"
+#import "NSObject+Delay.h"
+//#import "TAlertView.h"
+#import "NSTimer+stop.h"
+#import "NSDate+toString.h"
+//#import "MRProgress.h"
+//#import "SWTableViewCell.h"
+
+#define MR_SHORTHAND
+//#import <MagicalRecord/MagicalRecord.h>
+//#import <MagicalRecord/MagicalRecord+ShorthandMethods.h>
+//#import <MagicalRecord/MagicalRecordShorthandMethodAliases.h>
+//#import <CocoaLumberjack/CocoaLumberjack.h>
+
+
+#import "BLEManager.h"
+#import "BLEHeader.h"
+#import "CBP.h"
+//#import "navMain.h"
+
+//#import "UserInfo.h"
+//#import "Clock.h"
+//#import "SynData.h"
+//#import "DataRecord.h"
+//#import "FriendRequest.h"
+//#import "Tips.h"
+//#import "Friend.h"
+
+
+
+#endif
