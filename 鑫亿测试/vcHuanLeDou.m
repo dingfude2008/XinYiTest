@@ -122,11 +122,11 @@
 -(void)refreshRealData:(NSArray *)arr
 {
     self.lbl1.text = [arr[0] debugDescription];
-    self.lbl2.text = [arr[1] debugDescription];
+    //self.lbl2.text = [arr[1] debugDescription];
     self.lbl3.text = [arr[2] debugDescription];
     self.lbl4.text = [arr[3] debugDescription];
-    self.lbl5.text = [arr[4] debugDescription];
-    self.lbl6.text = [arr[5] debugDescription];
+//    self.lbl5.text = [arr[4] debugDescription];
+//    self.lbl6.text = [arr[5] debugDescription];
     
     switch ([arr[0] intValue]) {
         case 2:

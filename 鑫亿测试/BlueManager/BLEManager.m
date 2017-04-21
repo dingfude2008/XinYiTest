@@ -572,6 +572,12 @@ static BLEManager *manager;
                 NSNumber *year      = @(2000 + bytes[1]);
                 NSNumber *month     = @(bytes[2]);
                 NSNumber *day       = @(bytes[3]);
+                
+                if(dType == 5){
+                    month     = @(bytes[2] + 1);
+                    day       = @(bytes[3] + 1);
+                }
+                
                 NSNumber *hour      = @(bytes[4]);
                 NSNumber *minute    = @(bytes[5]);
                 NSNumber *second    = @(bytes[6]);
@@ -584,7 +590,7 @@ static BLEManager *manager;
                 double inter = [now timeIntervalSinceDate:date];
                 NSLog(@"间隔：%f", inter);
                 
-                if (inter > 50 || inter < -59)
+                if (fabs(inter) > 59)
                 {
 //                    if (!self.isNotContinueReadTime)
 //                    {
@@ -664,30 +670,27 @@ static BLEManager *manager;
                      else if(IsInitTime)     hBuff[7]=0x01;
                      else                    hBuff[7]=0x00;
                      
-                     hBuff[8] = nCalibrateOffset;
-                     hBuff[9] = nRealTimeAngleS;                             UI08 nCalibrateOffset;      //  校准偏移
-                     hBuff[10]= nRealTimeAngleC;                             UI08 nRealTimeAngleS;       //  原始角度
-                     hBuff[11]= nPrevMinuteAngle;                            UI08 nRealTimeAngleC;       //  校准后的角度
-                     hBuff[12]= nThisMinuteAngle;                            UI08 nPrevMinuteAngle;      //  前1分钟的角度
-                     hBuff[13]= nBattPercent;                                UI08 nThisMinuteAngle;      //  本1分钟的角度
-                     hBuff[14]= nBattVol;                                    UI08 nBattPercent;          //  电量百分比
-                     hBuff[15]= 0x00;                                        UI08 nBattVol;              //  电池电压
-                     hBuff[16]= 0x00;                                        UI08 nSoundSerial;          //  声音命令序号
-                     UI08 nSoundIndex;           //  声音播放索引    
-                     UI08 nSoundAction;          //  1:PLAY  0:STOP
+
                      */
                     
-                    NSNumber *year = @(2000 + bytes[1]);
-                    NSNumber *month = @(bytes[2]);
-                    NSNumber *day = @(bytes[3]);
-                    NSNumber *hour = @(bytes[4]);
-                    NSNumber *minute = @(bytes[5]);
-                    NSNumber *second = @(bytes[6]);
-                    NSMutableArray *arrNumb = [[NSMutableArray alloc] initWithObjects:year, month, day, hour, minute, second, nil];
-                    NSDate *date = [self getDateFromInt:arrNumb];
+                    long long interval = (bytes[5] << 24) | (bytes[4] << 16) | (bytes[3] << 8) | bytes[2];
+                    NSLog(@"interval : %@", @(interval));
+                    
+                    NSDate *date2000 = [self getDateFromInt:[@[@2000, @1, @1] mutableCopy]];
+                    NSDate *date = [NSDate dateWithTimeInterval:interval sinceDate:date2000];
                     
                     
-                    NSLog(@"时间的解析的结果:%@-%@-%@ %@:%@:%@", year, month, day, hour, minute, second);
+//                    NSNumber *year = @(2000 + bytes[1]);
+//                    NSNumber *month = @(bytes[2] + 1);
+//                    NSNumber *day = @(bytes[3] + 1);
+//                    NSNumber *hour = @(bytes[4]);
+//                    NSNumber *minute = @(bytes[5]);
+//                    NSNumber *second = @(bytes[6]);
+//                    NSMutableArray *arrNumb = [[NSMutableArray alloc] initWithObjects:year, month, day, hour, minute, second, nil];
+//                    NSDate *date = [self getDateFromInt:arrNumb];
+                    
+                    
+                    
                     NSLog(@"----实时数据的 解析后的时间为 :%@", date);
                     if (!date) {
                         date = [NSDate date];
@@ -700,23 +703,37 @@ static BLEManager *manager;
                      00:空闲状态,芽的时间未设置
                      */
                     
-                    int WORK_MODE           = [self convert: bytes[7]];     //
-                    int CALIBRATE_OFFSET    = [self convert: bytes[8]];     // 校准偏移角。按下芽的“十”字键时的角度。范围:[-45°,+45°]。
-                    int ORIGINA_ANGLE       = [self convert: bytes[9]];     // 未校准的实时角度。范围:[-125°,+125°]。
-                    int CALIBRATE_ANGLE     = [self convert: bytes[10]];    // 已校准的实时角度。范围:[-90°,+90°]。 = ORIGINA_ANGLE - CALIBRATE_OFFSET;
-                    int PREV_ANGLE          = [self convert: bytes[11]];    // 上一分钟的角度。(实时角度在一分钟内的综合处理后的结果)
-                    int THIS_ANGLE          = [self convert: bytes[12]];    // 当前分钟的角度。(实时角度在一分钟内的综合处理后的结果)
+//                    hBuff[8] = nCalibrateOffset;
+//                    hBuff[9] = nRealTimeAngleS;                             UI08 nCalibrateOffset;      //  校准偏移
+//                    hBuff[10]= nRealTimeAngleC;                             UI08 nRealTimeAngleS;       //  原始角度
+//                    hBuff[11]= nPrevMinuteAngle;                            UI08 nRealTimeAngleC;       //  校准后的角度
+//                    hBuff[12]= nThisMinuteAngle;                            UI08 nPrevMinuteAngle;      //  前1分钟的角度
+//                    hBuff[13]= nBattPercent;                                UI08 nThisMinuteAngle;      //  本1分钟的角度
+//                    hBuff[14]= nBattVol;                                    UI08 nBattPercent;          //  电量百分比
+//                    hBuff[15]= 0x00;                                        UI08 nBattVol;              //  电池电压
+//                    hBuff[16]= 0x00;                                        UI08 nSoundSerial;          //  声音命令序号
+//                    UI08 nSoundIndex;           //  声音播放索引
+//                    UI08 nSoundAction;          //  1:PLAY  0:STOP
+                    
+                    int WORK_MODE           = [self convert: bytes[6]];     //
+                    
+                    int CALIBRATE_OFFSET    = [self convert: bytes[9]];     // 校准偏移角。按下芽的“十”字键时的角度。范围:[-45°,+45°]。
+                    int ORIGINA_ANGLE       = [self convert: bytes[10]];    // 未校准的实时角度。范围:[-125°,+125°]。
+                    int CALIBRATE_ANGLE     = [self convert: bytes[11]];    // 已校准的实时角度。范围:[-90°,+90°]。 = ORIGINA_ANGLE - CALIBRATE_OFFSET;
+                    int PREV_ANGLE          = [self convert: bytes[12]];    // 上一分钟的角度。(实时角度在一分钟内的综合处理后的结果)
+                    int THIS_ANGLE          = [self convert: bytes[13]];    // 当前分钟的角度。(实时角度在一分钟内的综合处理后的结果)
                     
                     
                     NSLog(@"WORK_MODE:%d, CALIBRATE_OFFSET:%d, ORIGINA_ANGLE:%d, CALIBRATE_ANGLE:%d, PREV_ANGLE:%d, THIS_ANGLE:%d, ", WORK_MODE, CALIBRATE_OFFSET, ORIGINA_ANGLE, CALIBRATE_ANGLE, PREV_ANGLE, THIS_ANGLE);
                     
-                    /*
-                     该数据包 APP 根据需要可频繁被读取,例如 1 秒钟一次。
-                     该数据包中的 ORIGINA_ANGLE,CALIBRATE_ANGLE 实时更新(不是 1 分钟更新一次)。 该数据包中的 PREV_ANGLE,THIS_ANGLE 1 分钟更新一次。
-                     该数据包中的 CALIBRATE_OFFSET 校准时更新。
-                     */
                     
-                    [self.delegate CallBack_Data:2 uuidString:uuid obj:@[@(WORK_MODE),@(CALIBRATE_OFFSET),@(ORIGINA_ANGLE),@(CALIBRATE_ANGLE),@(PREV_ANGLE),@(THIS_ANGLE), date]];
+                    [self.delegate CallBack_Data:2 uuidString:uuid obj:@[@(WORK_MODE),
+                                                                         @(CALIBRATE_OFFSET),
+                                                                         @(ORIGINA_ANGLE),      //未校准的实时角度
+                                                                         @(CALIBRATE_ANGLE),    // 已校准的实时角度
+                                                                         @(PREV_ANGLE),
+                                                                         @(THIS_ANGLE),
+                                                                         date]];
                 }break;
                 case 4:{
                     
@@ -927,6 +944,12 @@ static BLEManager *manager;
         data[1] = (year - 2000) & 0xFF;
         data[2] = month & 0xFF;
         data[3] = day& 0xFF;
+        
+        if (dType == 5) {
+            data[2] = (month - 1) & 0xFF;
+            data[3] = (day - 1) & 0xFF;
+        }
+        
         data[4] = hour & 0xFF;
         data[5] = minute & 0xFF;
         data[6] = second & 0xFF;
